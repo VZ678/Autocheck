@@ -383,10 +383,57 @@ details summary:hover { color: var(--text2); }
 }
 .quellen-chip::before { content: '↗'; font-size: 0.7rem; }
 
-/* Responsive */
-@media(max-width:520px) {
+/* ── MOBILE OPTIMIERUNG ── */
+@media(max-width:600px) {
+  /* Layout */
+  .wrap { padding: 0 14px 60px; }
+  .hero { padding: 36px 0 28px; }
+  .hero h1 { font-size: 2.4rem; }
+  .hero p { font-size: 0.97rem; }
+
+  /* Karten */
+  .card { padding: 20px 16px; }
+  .scard { padding: 16px 14px; }
+  .result-hero { padding: 20px 16px; }
+
+  /* Input & Buttons */
   .input-row { flex-direction: column; }
+  .btn-primary {
+    width: 100%; padding: 16px;
+    font-size: 1.05rem; margin-top: 4px;
+  }
+  .btn-ghost { padding: 11px 14px; font-size: 0.85rem; }
+
+  /* Score & Verdict */
   .result-hero-top { flex-direction: column; align-items: center; text-align: center; }
+  .score-ring { width: 110px; height: 110px; margin-bottom: 8px; }
+  .score-ring svg { width: 110px; height: 110px; }
+  .score-ring .score-text { font-size: 2rem; }
+  .result-hero-info h2 { font-size: 1.15rem; }
+
+  /* Grids → einzelne Spalte */
+  .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+  .sw-grid { grid-template-columns: 1fr; gap: 8px; }
+
+  /* Listen */
+  .list-item { font-size: 0.9rem; }
+  .cost-row { font-size: 0.88rem; }
+  .sw-item { font-size: 0.88rem; }
+  .advice-text { font-size: 0.92rem; line-height: 1.7; }
+
+  /* Kaufwahrscheinlichkeit */
+  #kaufProzent { font-size: 1.35rem; }
+
+  /* Quellen Chips */
+  .quellen-chip { font-size: 0.78rem; padding: 5px 10px; }
+
+  /* Neue Analyse Button */
+  #result > div:first-child { margin-bottom: 10px; }
+  #result > div:first-child .btn-ghost { width: 100%; justify-content: center; }
+
+  /* Fehlerbox */
+  .error-box { flex-direction: column; gap: 10px; }
+  .error-box .btn-ghost { width: 100%; text-align: center; margin-left: 0; }
 }
 </style>
 </head>
@@ -611,12 +658,15 @@ details summary:hover { color: var(--text2); }
 </div><!-- /wrap -->
 
 <script>
-// Fallback-Kette: Reasoning-Modell zuerst, dann schnellere Fallbacks
+// Fallback-Kette: wird der Reihe nach probiert wenn ein Modell nicht verfügbar ist
 const MODELS = [
-  'deepseek/deepseek-r1:free',               // Denkt nach — beste Qualität
-  'meta-llama/llama-3.3-70b-instruct:free',  // Schneller Fallback
+  'deepseek/deepseek-r1:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-3-27b-it:free',
-  'google/gemma-4-31b-it:free'
+  'mistralai/mistral-7b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen3-8b:free'
 ];
 
 let keyVisible = false;
