@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoCheck KI — Fahrzeuganalyse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #070B14;
+  --bg2:       #0D1120;
+  --surface:   #111827;
+  --surface2:  #1a2235;
+  --surface3:  #1f2a40;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --blue:      #3B82F6;
+  --blue2:     #6366F1;
+  --purple:    #8B5CF6;
+  --green:     #10B981;
+  --yellow:    #F59E0B;
+  --red:       #EF4444;
+  --text:      #F1F5F9;
+  --text2:     #94A3B8;
+  --text3:     #64748B;
+  --r:         16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND GLOW ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(59,130,246,0.08) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 64px 0 48px;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.78rem; font-weight: 600;
+  color: #a5b4fc;
+  letter-spacing: 0.04em;
+  margin-bottom: 24px;
+}
+.hero-badge span { width: 6px; height: 6px; background: #818cf8; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #e0e7ff 0%, #818cf8 40%, #6366f1 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 16px;
+}
+.hero p {
+  font-size: 1.05rem; color: var(--text2); line-height: 1.6; max-width: 480px; margin: 0 auto 12px;
+}
+.hero-platforms {
+  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px;
+}
+.platform-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 5px 12px;
+  font-size: 0.78rem; font-weight: 500; color: var(--text2);
+}
+.platform-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 28px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+  pointer-events: none;
+}
+.card-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── INPUTS ── */
+label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--text2); margin-bottom: 8px; }
+
+.input-wrap { position: relative; }
+.input-wrap .input-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 1rem; pointer-events: none;
+}
+input, textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: var(--text);
+  font-size: 0.95rem; font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.input-wrap input { padding-left: 40px; }
+input:focus, textarea:focus {
+  border-color: var(--blue2);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+input[type="password"] { letter-spacing: 0.12em; }
+textarea { resize: vertical; min-height: 80px; }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 14px 32px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; letter-spacing: -0.01em;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(99,102,241,0.4); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-ghost {
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border2); border-radius: 8px;
+  padding: 9px 16px; font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface3); }
+
+.input-row { display: flex; gap: 10px; align-items: flex-end; }
+.input-row > div { flex: 1; }
+
+/* ── TIP ── */
+.tip {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: 10px; padding: 12px 14px;
+  font-size: 0.83rem; color: var(--text2); line-height: 1.5;
+  margin-top: 14px;
+}
+.tip-icon { font-size: 0.9rem; margin-top: 1px; flex-shrink: 0; }
+.tip a { color: #a5b4fc; text-decoration: none; }
+.tip a:hover { text-decoration: underline; }
+
+/* ── LOADING ── */
+#loading { display: none; }
+.loading-inner {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 20px; text-align: center;
+}
+.loader {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 3px solid var(--border2);
+  border-top-color: var(--blue2);
+  animation: spin 0.75s linear infinite;
+  margin-bottom: 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+#loadingStep { font-size: 0.85rem; color: var(--text2); }
+.loading-dots span {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--blue2); margin: 0 2px;
+  animation: blink 1.2s infinite both;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+/* ── ERROR ── */
+.error-box {
+  display: none;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px; padding: 16px 18px;
+  color: #fca5a5; font-size: 0.9rem;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ── RESULT ── */
+#result { display: none; }
+
+/* Score hero card */
+.result-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 32px;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.result-hero::after {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.result-hero-top {
+  display: flex; gap: 24px; align-items: flex-start;
+  margin-bottom: 24px;
+}
+.score-ring {
+  flex-shrink: 0; position: relative;
+  width: 100px; height: 100px;
+}
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring .score-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.8rem; line-height: 1;
+}
+.score-ring .score-text small { font-size: 0.65rem; font-weight: 500; opacity: 0.6; margin-top: 2px; }
+
+.result-hero-info { flex: 1; min-width: 0; }
+.result-hero-info h2 {
+  font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;
+  margin-bottom: 6px; line-height: 1.3;
+}
+.result-hero-info p { font-size: 0.9rem; color: var(--text2); line-height: 1.5; }
+
+/* Verdict */
+.verdict {
+  border-radius: 12px; padding: 16px 20px;
+  font-size: 0.92rem; line-height: 1.6; display: flex; gap: 12px; align-items: flex-start;
+}
+.verdict-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+.verdict-body strong { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.verdict-buy    { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+.verdict-buy strong { color: var(--green); }
+.verdict-caution{ background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+.verdict-caution strong { color: var(--yellow); }
+.verdict-avoid  { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.2); }
+.verdict-avoid strong { color: var(--red); }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media(max-width:640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* Section cards */
+.scard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px;
+}
+.scard-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.scard-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.icon-warning { background: rgba(245,158,11,0.12); }
+.icon-tool    { background: rgba(59,130,246,0.12); }
+.icon-money   { background: rgba(16,185,129,0.12); }
+.icon-chart   { background: rgba(139,92,246,0.12); }
+.icon-fuel    { background: rgba(99,102,241,0.12); }
+.icon-star    { background: rgba(251,191,36,0.12); }
+
+.scard-title { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2); }
+
+.list-item {
+  display: flex; gap: 10px;
+  padding: 8px 0;
+  font-size: 0.88rem; color: var(--text2); line-height: 1.45;
+  border-bottom: 1px solid var(--border);
+}
+.list-item:last-child { border-bottom: none; }
+.list-bullet {
+  width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0;
+  background: rgba(99,102,241,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: #818cf8; margin-top: 1px; font-weight: 700;
+}
+
+/* Cost table */
+.cost-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.cost-row:last-child { border-bottom: none; font-weight: 700; color: var(--text); }
+.cost-row:last-child .cost-label { color: var(--text); }
+.cost-label { color: var(--text2); }
+.cost-value { font-weight: 600; color: var(--text); }
+
+/* Strengths/weaknesses */
+.sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:500px) { .sw-grid { grid-template-columns: 1fr; } }
+.sw-col-head {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sw-item {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+  font-size: 0.87rem; color: var(--text2); line-height: 1.4;
+}
+.sw-item:last-child { border-bottom: none; }
+.sw-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.dot-green { background: var(--green); }
+.dot-red   { background: var(--red); }
+
+/* Advice card */
+.advice-text {
+  font-size: 0.93rem; line-height: 1.75; color: var(--text2);
+  padding: 16px;
+  background: var(--surface2); border-radius: 10px;
+  border-left: 3px solid var(--blue2);
+}
+
+/* Details */
+details summary {
+  cursor: pointer; color: var(--text3); font-size: 0.8rem;
+  padding: 10px 0; user-select: none; list-style: none;
+}
+details summary::before { content: '▶  '; font-size: 0.65rem; }
+details[open] summary::before { content: '▼  '; }
+details summary:hover { color: var(--text2); }
+.raw-pre {
+  background: var(--bg); border-radius: 8px; padding: 14px;
+  font-size: 0.76rem; color: var(--text3); white-space: pre-wrap;
+  max-height: 260px; overflow-y: auto; margin-top: 8px;
+  font-family: 'Courier New', monospace;
+  border: 1px solid var(--border);
+}
+
+/* Score colors */
+.score-good { color: var(--green); }
+.score-ok   { color: var(--yellow); }
+.score-bad  { color: var(--red); }
+
+/* Quellen Chips */
+.quellen-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 6px; padding: 4px 10px;
+  font-size: 0.75rem; font-weight: 500; color: #93c5fd;
+}
+.quellen-chip::before { content: '↗'; font-size: 0.7rem; }
+
+/* Responsive */
+@media(max-width:520px) {
+  .input-row { flex-direction: column; }
+  .result-hero-top { flex-direction: column; align-items: center; text-align: center; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><span></span> KI-gestützte Fahrzeuganalyse</div>
+    <h1>AutoCheck KI</h1>
+    <p>Link einfügen — KI analysiert das Inserat und bewertet Preis, Mängel & Unterhalt.</p>
+    <div class="hero-platforms">
+      <div class="platform-chip"><span class="dot"></span> mobile.de</div>
+      <div class="platform-chip"><span class="dot"></span> AutoScout24</div>
+      <div class="platform-chip"><span class="dot"></span> Kleinanzeigen</div>
+    </div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="card">
+    <div class="card-label">Einstellungen</div>
+    <label>OpenRouter API Key <span style="color:var(--green);font-size:0.78rem;font-weight:600;">— kostenlos</span></label>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="input-wrap" style="flex:1;">
+        <span class="input-icon">🔑</span>
+        <input type="password" id="apiKey" placeholder="sk-or-v1-..." autocomplete="off">
+      </div>
+      <button class="btn-ghost" onclick="toggleKey()" id="toggleBtn">Anzeigen</button>
+    </div>
+  </div>
+
+  <!-- URL INPUT -->
+  <div class="card">
+    <div class="card-label">Fahrzeug-Link</div>
+    <div class="input-row">
+      <div>
+        <label>Inserat URL einfügen</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔗</span>
+          <input type="url" id="carUrl" placeholder="mobile.de · autoscout24.de · kleinanzeigen.de ...">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="analyze()" id="analyzeBtn">
+        Analysieren →
+      </button>
+    </div>
+    <textarea id="extraInfo" style="display:none;"></textarea>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="card">
+    <div class="loading-inner">
+      <div class="loader"></div>
+      <div class="loading-title">Analysiere Fahrzeug</div>
+      <div id="loadingStep">Seite wird geladen…</div>
+      <div class="loading-dots" style="margin-top:12px;">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="errorBox" class="error-box" style="display:none;">
+    <span>⚠️</span><span id="errorMsg" style="flex:1;"></span>
+    <button class="btn-ghost" onclick="analyze()" style="margin-left:8px;white-space:nowrap;flex-shrink:0;">↺ Wiederholen</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn-ghost" onclick="newAnalysis()">← Neue Analyse</button>
+    </div>
+
+    <!-- Hero Score Card -->
+    <div class="result-hero">
+      <div class="result-hero-top">
+        <div class="score-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+            <circle id="scoreArc" cx="50" cy="50" r="42" fill="none" stroke="#10B981" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264"
+              style="transition: stroke-dashoffset 1s ease, stroke 0.5s ease;"/>
+          </svg>
+          <div class="score-text">
+            <span id="scoreNum" class="score-good">—</span>
+            <small>/100</small>
+          </div>
+        </div>
+        <div class="result-hero-info">
+          <h2 id="carTitle">—</h2>
+          <p id="carSummary">—</p>
+        </div>
+      </div>
+      <div id="verdictBanner" class="verdict"></div>
+      <div id="quellenBar" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">📡 Verwendete Quellen</div>
+        <div id="quellenList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Grid: Mängel + Prüfen -->
+    <div class="grid-2">
+      <div class="scard">
+        <div class="scard-header">
+          <div class="scard-icon icon-warning">⚠️</div>
+          <span class="scard-title">Typische Mängel</span>
+        </div>
+        <div id="listMaengel"></div>
+      </div>
+      <div class="scard">
+        <div class="scard-header">
+          <div class="scard-icon icon-tool">🔧</div>
+          <span class="scard-title">Was prüfen beim Kauf</span>
+        </div>
+        <div id="listPruefen"></div>
+      </div>
+    </div>
+
+    <!-- Grid: Kosten + Markt -->
+    <div class="grid-2">
+      <div class="scard">
+        <div class="scard-header">
+          <div class="scard-icon icon-money">💶</div>
+          <span class="scard-title">Unterhalt / Jahr</span>
+        </div>
+        <div id="tableCosts"></div>
+      </div>
+      <div class="scard">
+        <div class="scard-header">
+          <div class="scard-icon icon-chart">📈</div>
+          <span class="scard-title">Markt & Wertverlust</span>
+        </div>
+        <div id="listMarkt"></div>
+      </div>
+    </div>
+
+    <!-- Verbrauch -->
+    <div class="scard" style="margin-bottom:16px;">
+      <div class="scard-header">
+        <div class="scard-icon icon-fuel">⛽</div>
+        <span class="scard-title">Verbrauch & Betriebskosten</span>
+      </div>
+      <div id="listVerbrauch"></div>
+    </div>
+
+    <!-- Stärken & Schwächen -->
+    <div class="scard" style="margin-bottom:16px;">
+      <div class="scard-header">
+        <div class="scard-icon icon-star">🏆</div>
+        <span class="scard-title">Stärken & Schwächen</span>
+      </div>
+      <div class="sw-grid">
+        <div>
+          <div class="sw-col-head" style="color:var(--green);">✓ Stärken</div>
+          <div id="listStaerken"></div>
+        </div>
+        <div>
+          <div class="sw-col-head" style="color:var(--red);">✗ Schwächen</div>
+          <div id="listSchwaechen"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ausstattung -->
+    <div class="scard" style="margin-bottom:16px;" id="ausstattungCard">
+      <div class="scard-header">
+        <div class="scard-icon" style="background:rgba(99,102,241,0.12);">🎛️</div>
+        <span class="scard-title">Ausstattungsanalyse</span>
+      </div>
+
+      <!-- Vollständigkeitsbalken -->
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:0.82rem;color:var(--text2);font-weight:500;">Ausstattungsvollständigkeit</span>
+          <span id="austProzent" style="font-size:1.1rem;font-weight:800;color:var(--blue2);">—%</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:999px;height:10px;overflow:hidden;">
+          <div id="austBar" style="height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#4F46E5,#7C3AED);transition:width 1s ease;"></div>
+        </div>
+        <p id="austText" style="font-size:0.83rem;color:var(--text2);margin-top:10px;line-height:1.5;"></p>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:0;">
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue2);margin-bottom:10px;">
+            ★ Sonderausstattung
+          </div>
+          <div id="listSonder"></div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px;">
+            ✗ Fehlt für Vollausstattung
+          </div>
+          <div id="listFehlt"></div>
+        </div>
+      </div>
+      <div id="listSerie" style="display:none;"></div>
+    </div>
+
+    <!-- Empfehlung -->
+    <div class="card">
+      <div class="card-label">KI-Empfehlung</div>
+      <div id="finalAdvice" class="advice-text">—</div>
+      <div id="rawResponse" style="display:none;"></div>
+
+      <!-- Kaufwahrscheinlichkeit -->
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.82rem; font-weight:600; color:var(--text2);">Kaufwahrscheinlichkeit</span>
+          <span id="kaufProzent" style="font-size:1.6rem; font-weight:900; letter-spacing:-0.02em;">—%</span>
+        </div>
+        <div style="background:var(--surface2); border-radius:999px; height:12px; overflow:hidden;">
+          <div id="kaufBar" style="height:100%; width:0%; border-radius:999px; transition:width 1.2s ease;"></div>
+        </div>
+        <div id="kaufFaktoren" style="margin-top:16px;"></div>
+        <p id="kaufText" style="font-size:0.75rem; color:var(--text3); margin-top:8px;"></p>
+      </div>
+    </div>
+
+  </div><!-- /result -->
+
+</div><!-- /wrap -->
+
+<script>
+// Fallback-Kette: Reasoning-Modell zuerst, dann schnellere Fallbacks
+const MODELS = [
+  'deepseek/deepseek-r1:free',               // Denkt nach — beste Qualität
+  'meta-llama/llama-3.3-70b-instruct:free',  // Schneller Fallback
+  'google/gemma-3-27b-it:free',
+  'google/gemma-4-31b-it:free'
+];
+
+let keyVisible = false;
+
+function toggleKey() {
+  const inp = document.getElementById('apiKey');
+  keyVisible = !keyVisible;
+  inp.type = keyVisible ? 'text' : 'password';
+  document.getElementById('toggleBtn').textContent = keyVisible ? 'Verbergen' : 'Anzeigen';
+}
+
+function newAnalysis() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('carUrl').value = '';
+  document.getElementById('carUrl').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setStep(msg) { document.getElementById('loadingStep').textContent = msg; }
+
+function detectPlatform(url) {
+  if (url.includes('autoscout24')) return 'autoscout24';
+  if (url.includes('kleinanzeigen.de') || url.includes('ebay-kleinanzeigen')) return 'kleinanzeigen';
+  if (url.includes('mobile.de')) return 'mobile';
+  return 'unknown';
+}
+
+function extractCarFromUrl(url) {
+  try {
+    const path = new URL(url).pathname;
+    const slug = path.split('/').filter(Boolean).find(s => s.length > 10) || '';
+    return slug.replace(/-/g, ' ').replace(/\d{6,}/g, '').trim();
+  } catch(e) { return ''; }
+}
+
+function cleanHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  div.querySelectorAll('script,style,nav,footer,header,iframe,svg').forEach(el => el.remove());
+  return div.innerText.replace(/\s+/g, ' ').trim().slice(0, 8000);
+}
+
+// Findet den wahrscheinlichsten Ausstattungsabschnitt im Seitentext
+function extractEquipmentSection(text) {
+  if (!text) return '';
+  const markers = ['Sonderausstattung', 'Ausstattungsmerkmale', 'Ausstattung', 'Extras'];
+  const lower = text.toLowerCase();
+
+  for (const m of markers) {
+    // LETZTE Fundstelle bevorzugen — Navigation hat den Begriff vorne, Inhalt hinten
+    const lastIdx = lower.lastIndexOf(m.toLowerCase());
+    const firstIdx = lower.indexOf(m.toLowerCase());
+    for (const idx of [lastIdx, firstIdx]) {
+      if (idx < 0) continue;
+      const section = text.slice(idx, idx + 4000);
+      // Echte Ausstattungsliste: viele kurze Zeilen (< 80 Zeichen), wenige URLs
+      const shortLines = section.split('\n').filter(l => {
+        const t = l.trim();
+        return t.length > 3 && t.length < 80 && !t.includes('http') && !t.includes('www');
+      });
+      if (shortLines.length >= 8) return section;
+    }
+  }
+  // Fallback: kompletter Text (KI soll selbst filtern)
+  return text.slice(0, 6000);
+}
+
+async function fetchCarPage(url) {
+  if (detectPlatform(url) === 'mobile') return null;
+  const proxies = [
+    async () => {
+      const r = await fetch('https://r.jina.ai/' + url, { headers: { 'Accept': 'text/plain' } });
+      if (!r.ok) return null;
+      const t = await r.text();
+      return t.length > 500 ? t.slice(0, 8000) : null;
+    },
+    async () => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if (!r.ok) return null;
+      const d = await r.json();
+      const html = d.contents || '';
+      return html.length > 500 ? cleanHtml(html) : null;
+    },
+    async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      if (!r.ok) return null;
+      const html = await r.text();
+      return html.length > 500 ? cleanHtml(html) : null;
+    }
+  ];
+  for (const tryProxy of proxies) {
+    try { const res = await tryProxy(); if (res) return res; } catch(e) {}
+  }
+  return null;
+}
+
+async function webSearch(query) {
+  try {
+    const r = await fetch('https://s.jina.ai/' + encodeURIComponent(query), {
+      headers: { 'Accept': 'text/plain' }
+    });
+    if (!r.ok) return '';
+    return (await r.text()).slice(0, 2500);
+  } catch(e) { return ''; }
+}
+
+async function fetchPage(url) {
+  try {
+    const r = await fetch('https://r.jina.ai/' + url, { headers: { 'Accept': 'text/plain' } });
+    if (!r.ok) return '';
+    return (await r.text()).slice(0, 3000);
+  } catch(e) { return ''; }
+}
+
+function parseCarName(hint) {
+  // "audi q5 45 tfsi quattro s line" → { brand: "Audi", model: "Q5" }
+  const parts = hint.trim().split(/\s+/);
+  const brand = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase() : '';
+  const model = parts[1] ? parts[1].toUpperCase() : '';
+  return { brand, model, full: brand + ' ' + model };
+}
+
+async function fetchADAC(carHint) {
+  // ADAC Suche direkt abrufen
+  const { full } = parseCarName(carHint);
+  return await fetchPage('https://www.adac.de/suche/?search=' + encodeURIComponent(full) + '+Gebrauchtwagen+Mängel+Zuverlässigkeit');
+}
+
+async function fetchKBA(carHint) {
+  // KBA Rückrufdatenbank (Kraftfahrt-Bundesamt)
+  const { full } = parseCarName(carHint);
+  return await fetchPage('https://www.kba.de/DE/Fahrzeugsicherheit/Rueckrufaktionen/Rueckrufsuche/rueckrufsuche_node.html?input_=' + encodeURIComponent(full));
+}
+
+async function fetchNHTSARecalls(carHint) {
+  // NHTSA free API — Rückrufe (international gültig für viele Modelle)
+  try {
+    const { brand, model } = parseCarName(carHint);
+    const url = `https://api.nhtsa.gov/complaints/complaintsByVehicle?make=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`;
+    const r = await fetch(url);
+    if (!r.ok) return '';
+    const data = await r.json();
+    const complaints = (data.results || []).slice(0, 8).map(c =>
+      `[${c.components}] ${c.summary?.slice(0, 150) || ''}`
+    ).join('\n');
+    return complaints ? `NHTSA Beschwerden (${data.count || 0} gesamt):\n${complaints}` : '';
+  } catch(e) { return ''; }
+}
+
+async function callAI(apiKey, prompt, maxTokens = 4096) {
+  for (const model of MODELS) {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+          'HTTP-Referer': 'https://autocheck-ki.local',
+          'X-Title': 'AutoCheck KI'
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          temperature: 0.1,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err.error?.message || '';
+        if (res.status === 401) throw new Error('API Key ungültig. Bitte auf openrouter.ai prüfen.');
+        // Rate-Limit oder Modell nicht verfügbar → nächstes Modell probieren
+        if (res.status === 429 || res.status === 404 || msg.includes('No endpoints') || msg.includes('not found')) continue;
+        throw new Error(msg || 'API Fehler ' + res.status);
+      }
+      const data = await res.json();
+      // DeepSeek R1 gibt <think>...</think> vor der Antwort aus — entfernen
+      return (data.choices[0].message.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    } catch(e) {
+      if (e.message.includes('No endpoints') || e.message.includes('not found')) continue;
+      throw e;
+    }
+  }
+  throw new Error('Kein KI-Modell verfügbar. Bitte später erneut versuchen.');
+}
+
+function parseJSON(text) {
+  const m = text.match(/```json\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
+  if (!m) throw new Error('Kein JSON in der Antwort gefunden');
+  let raw = m[1];
+  raw = raw
+    .replace(/\/\/[^\n\r"]*/g, '')                            // // Kommentare entfernen
+    .replace(/\/\*[\s\S]*?\*\//g, '')                         // /* */ Kommentare
+    .replace(/,\s*([}\]])/g, '$1')                            // trailing commas
+    .replace(/([{,\[\n\r]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')  // unquoted keys
+    .replace(/"([a-zA-Z_][a-zA-Z0-9_]*)"\s*":/g, '"$1":')   // doppelt gequotete keys fixen
+    .replace(/:\s*'((?:[^'\\]|\\.)*)'/g, (_, s) => ': "' + s.replace(/"/g, '\\"') + '"')  // single-quoted values
+    .replace(/:\s*undefined\b/g, ': null')                    // undefined → null
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');      // Steuerzeichen (außer \t\n\r)
+  try {
+    return JSON.parse(raw);
+  } catch(e) {
+    // Versuch 2: innerhalb des äußersten { } kürzen
+    const first = raw.indexOf('{');
+    const last  = raw.lastIndexOf('}');
+    if (first >= 0 && last > first) {
+      try { return JSON.parse(raw.slice(first, last + 1)); } catch(e2) {}
+    }
+    throw new Error('JSON ungültig: ' + e.message);
+  }
+}
+
+function makeListItems(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  (items || []).forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'list-item';
+    d.innerHTML = `<div class="list-bullet">${i+1}</div><span>${item}</span>`;
+    el.appendChild(d);
+  });
+}
+
+function makeCostRows(containerId, rows) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  (rows || []).forEach(([label, value]) => {
+    const d = document.createElement('div');
+    d.className = 'cost-row';
+    d.innerHTML = `<span class="cost-label">${label}</span><span class="cost-value">${value}</span>`;
+    el.appendChild(d);
+  });
+}
+
+function makeSwItems(containerId, items, isStrength) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  (items || []).forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'sw-item';
+    d.innerHTML = `<div class="sw-dot ${isStrength ? 'dot-green' : 'dot-red'}"></div><span>${item}</span>`;
+    el.appendChild(d);
+  });
+}
+
+function setScore(score) {
+  const arc = document.getElementById('scoreArc');
+  const num = document.getElementById('scoreNum');
+  const circumference = 264;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 66 ? '#10B981' : score >= 41 ? '#F59E0B' : '#EF4444';
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = color;
+  num.textContent = score;
+  num.className = score >= 66 ? 'score-good' : score >= 41 ? 'score-ok' : 'score-bad';
+}
+
+async function analyze() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const url    = document.getElementById('carUrl').value.trim();
+
+  if (!apiKey) return showError('Bitte zuerst den OpenRouter API Key eingeben.');
+  if (!url)    return showError('Bitte eine Inserat-URL eingeben.');
+
+  localStorage.setItem('autocheck_or_key', apiKey);
+  document.getElementById('errorBox').style.display  = 'none';
+  document.getElementById('result').style.display    = 'none';
+  document.getElementById('loading').style.display   = 'block';
+  document.getElementById('analyzeBtn').disabled     = true;
+
+  try {
+    const platform = detectPlatform(url);
+    const pName    = { autoscout24:'AutoScout24', kleinanzeigen:'Kleinanzeigen', mobile:'mobile.de' }[platform] || 'Inserat';
+    const urlInfo  = extractCarFromUrl(url);
+    const carHint  = urlInfo || pName;
+    const { full: carFull } = parseCarName(carHint);
+
+    // ── ALLE 7 Quellen gleichzeitig laden ──
+    setStep('Inserat & Quellen werden geladen…');
+    const [pageText, adacData, kbaData, nhtsaData, searchMaengel, searchPreise, searchKosten] = await Promise.all([
+      fetchCarPage(url),
+      fetchADAC(carHint),
+      fetchKBA(carHint),
+      fetchNHTSARecalls(carHint),
+      webSearch(carFull + ' ADAC TÜV Mängel Zuverlässigkeit Gebrauchtwagen Erfahrungen'),
+      webSearch(carFull + ' Gebrauchtwagen Kaufberatung Marktpreis 2025 autobild'),
+      webSearch(carFull + ' Unterhaltskosten Wertverlust Betriebskosten')
+    ]);
+
+    const text       = pageText || '';
+    const dataSource = text.length > 500
+      ? `Inseratsdaten vollständig ausgelesen von ${pName}.`
+      : `HINWEIS: Seite nicht ladbar. Analysiere anhand URL-Slug: "${urlInfo}" und Modellwissen.`;
+
+    // ── AUFRUF 1: Hauptanalyse ──
+    setStep('KI denkt nach… (kann 20–30 Sek. dauern)');
+
+    const promptHaupt = `Du bist Kfz-Sachverständiger in Deutschland. Nutze bevorzugt die Quelldaten, sonst Fachwissen.
+
+INSERAT: ${url}
+${dataSource}
+${text ? 'INSERATSTEXT:\n' + text.slice(0, 5000) : ''}
+
+QUELLEN:
+[ADAC] ${adacData || 'nicht verfügbar'}
+[KBA] ${kbaData || 'nicht verfügbar'}
+[NHTSA] ${nhtsaData || 'nicht verfügbar'}
+[Mängel/TÜV] ${searchMaengel || 'nicht verfügbar'}
+[Marktpreise] ${searchPreise || 'nicht verfügbar'}
+[Kosten] ${searchKosten || 'nicht verfügbar'}
+
+WICHTIG — lies direkt aus Inseratstext:
+- kilometerstand: berechne km/Jahr. <12k/J=90+Pkt, 12-18k=70-85, 18-25k=50-65, >25k=<50
+- haendler_privat: Händler=75 (Gewährleistung), Privat=55
+- preis_vs_markt: günstiger als Marktdaten=höher, teurer=niedriger
+
+Antworte NUR mit validem JSON in \`\`\`json ... \`\`\`:
+\`\`\`json
+{
+  "fahrzeug": "Marke Modell Motorisierung Baujahr",
+  "quellen": ["ADAC","TÜV","KBA","autobild.de"],
+  "score": 72,
+  "score_begruendung": "1-2 Sätze Begründung",
+  "verdict": "kaufen",
+  "verdict_text": "2-3 Sätze Fazit",
+  "typische_maengel": ["Mangel 1 (Quelle)","Mangel 2","Mangel 3","Mangel 4","Mangel 5"],
+  "was_pruefen": ["Prüfpunkt 1","Prüfpunkt 2","Prüfpunkt 3","Prüfpunkt 4","Prüfpunkt 5"],
+  "unterhaltskosten": [
+    ["KFZ-Steuer/Jahr","ca. X €"],["Versicherung HK+VK","ca. X–X €"],
+    ["Inspektion/Service","ca. X €/Jahr"],["Zahnriemen/Steuerkette","ca. X € alle X km"],
+    ["TÜV + AU","ca. X € alle 2 J."],["Reifensatz 4x","ca. 350–550 €"],["Gesamt/Jahr","ca. X.XXX €"]
+  ],
+  "markt": ["Marktpreis aktuell","Preis-Bewertung des Inserats","Wertverlust/Jahr","Marktlage"],
+  "verbrauch": ["WLTP Normverbrauch","Realverbrauch Erfahrungswerte","Kosten/100km","Jahreskosten bei 15.000km"],
+  "staerken": ["Stärke 1","Stärke 2","Stärke 3","Stärke 4"],
+  "schwaechen": ["Schwäche 1","Schwäche 2","Schwäche 3"],
+  "empfehlung": "4-5 Sätze. Zitiere KONKRET Quellen: Laut ADAC... / TÜV Report zeigt... / AutoBild empfiehlt... Gib Preisverhandlungstipp.",
+  "kauffaktoren": {
+    "preis_vs_markt":  {"punkte": 80, "text": "z.B. 5% unter Marktpreis"},
+    "kilometerstand":  {"punkte": 70, "text": "z.B. 13.000 km/Jahr — normal"},
+    "maengel_tuev":    {"punkte": 60, "text": "z.B. bekannte Schwachstellen laut TÜV"},
+    "ausstattung":     {"punkte": 85, "text": "z.B. gut ausgestattet für Klasse"},
+    "wertverlust":     {"punkte": 65, "text": "z.B. ca. 8% Wertverlust/Jahr"},
+    "haendler_privat": {"punkte": 75, "text": "z.B. Händler mit gesetzl. Gewährleistung"}
+  }
+}
+\`\`\`
+verdict: kaufen=66-100, abwarten=41-65, meiden=0-40`;
+
+    const response = await callAI(apiKey, promptHaupt, 4096);
+    document.getElementById('rawResponse').textContent = response;
+    const data = parseJSON(response);
+
+    // ── AUFRUF 2: Ausstattungsanalyse ──
+    let aust = {};
+    if (text.length < 300) {
+      // Kein Seitentext → keine Ausstattungsdaten → nichts erfinden
+      aust = {
+        sonder: [], fehlt: [],
+        vollstaendigkeit_prozent: 0,
+        vollstaendigkeit_text: 'Ausstattungsanalyse nicht möglich — Inserat konnte nicht geladen werden (mobile.de oder Proxy blockiert).'
+      };
+    } else {
+      setStep('Ausstattung analysieren…');
+      const promptAust = `Auto: ${data.fahrzeug || carFull}
+
+Inseratstext (enthält Webseiten-Navigation, Links UND Fahrzeugdaten gemischt):
+${text.slice(0, 6000)}
+
+AUFGABE: Finde im obigen Text alle Ausstattungsmerkmale dieses Fahrzeugs.
+
+Ausstattungsmerkmale in deutschen Kfz-Inseraten sind kurze Begriffe, z.B.:
+Klimaanlage, Navigationssystem, Sitzheizung, Ledersitze, Panoramadach, Schiebedach,
+Xenon, LED-Scheinwerfer, Einparkhilfe, Rückfahrkamera, Tempomat, Adaptiver Tempomat,
+ABS, ESP, Totwinkelassistent, Spurhalteassistent, Bluetooth, Apple CarPlay, Android Auto,
+Standheizung, Anhängerkupplung, Allrad, Sportpaket, M-Paket, AMG-Paket, Alufelgen usw.
+
+IGNORIERE: Website-Navigation, Buttons, URLs (http...), Händlername, AGBs, Datenschutz,
+Preisangaben, Kilometerstand, Baujahr, PS-Angaben, Beschreibungstexte des Verkäufers.
+
+1. SONDER: Kostenpflichtige Extras die im Text stehen (nicht Serienausstattung).
+2. FEHLT: Was fehlt typischerweise bei diesem Modell/Linie für Vollausstattung?
+
+SONDER:
+- Feature 1 (~XXX €)
+
+FEHLT:
+- Fehlendes Feature (~XXX €)
+
+PROZENT: 72
+TEXT: Ein Satz Bewertung.`;
+
+      try {
+        const austResp = await callAI(apiKey, promptAust, 2048);
+        const parsed   = parseAustText(austResp);
+        aust = (parsed.sonder.length > 0 || parsed.fehlt.length > 0) ? parsed : parseJSON(austResp);
+      } catch(e) { /* Ausstattung optional */ }
+    }
+
+
+    renderResults(data, aust);
+
+  } catch(e) {
+    showError(e.message || 'Unbekannter Fehler');
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function parseAustText(text) {
+  const sonder = [], fehlt = [];
+  let mode = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^SONDER:/i.test(line)) { mode = 'sonder'; continue; }
+    if (/^FEHLT:/i.test(line))  { mode = 'fehlt';  continue; }
+    if (/^PROZENT:/i.test(line) || /^TEXT:/i.test(line)) { mode = null; continue; }
+    if (mode && /^[-•*\d]/.test(line)) {
+      const item = line.replace(/^[-•*\d.]\s*/, '').trim();
+      if (item.length > 2) (mode === 'sonder' ? sonder : fehlt).push(item);
+    }
+  }
+  const pctMatch = text.match(/PROZENT:\s*(\d+)/i);
+  const txtMatch = text.match(/TEXT:\s*(.+)/i);
+  return {
+    sonder,
+    fehlt,
+    vollstaendigkeit_prozent: pctMatch ? parseInt(pctMatch[1]) : 65,
+    vollstaendigkeit_text:    txtMatch ? txtMatch[1].trim() : ''
+  };
+}
+
+function renderResults(data, aust) {
+  if (data.quellen?.length) {
+    const qList = document.getElementById('quellenList');
+    qList.innerHTML = '';
+    data.quellen.forEach(q => {
+      const chip = document.createElement('span');
+      chip.className = 'quellen-chip';
+      chip.textContent = q;
+      qList.appendChild(chip);
+    });
+    document.getElementById('quellenBar').style.display = 'block';
+  }
+
+  document.getElementById('carTitle').textContent   = data.fahrzeug || '—';
+  document.getElementById('carSummary').textContent = data.score_begruendung || '';
+  setScore(data.score || 0);
+
+  const vb     = document.getElementById('verdictBanner');
+  const vClass = data.verdict === 'kaufen' ? 'verdict-buy' : data.verdict === 'abwarten' ? 'verdict-caution' : 'verdict-avoid';
+  const vEmoji = data.verdict === 'kaufen' ? '✅' : data.verdict === 'abwarten' ? '⚠️' : '❌';
+  const vLabel = data.verdict === 'kaufen' ? 'Kaufempfehlung' : data.verdict === 'abwarten' ? 'Mit Vorsicht' : 'Nicht empfohlen';
+  vb.className = 'verdict ' + vClass;
+  vb.innerHTML = `<div class="verdict-icon">${vEmoji}</div><div class="verdict-body"><strong>${vLabel}</strong>${data.verdict_text || ''}</div>`;
+
+  makeListItems('listMaengel',    data.typische_maengel);
+  makeListItems('listPruefen',    data.was_pruefen);
+  makeCostRows ('tableCosts',     data.unterhaltskosten);
+  makeListItems('listMarkt',      data.markt);
+  makeListItems('listVerbrauch',  data.verbrauch);
+  makeSwItems  ('listStaerken',   data.staerken,   true);
+  makeSwItems  ('listSchwaechen', data.schwaechen, false);
+
+  const noData = !aust.vollstaendigkeit_prozent && !aust.sonder?.length && !aust.fehlt?.length;
+  const pct = aust.vollstaendigkeit_prozent || 0;
+
+  if (noData) {
+    document.getElementById('austProzent').textContent = '—';
+    document.getElementById('austProzent').style.color = 'var(--text3)';
+    document.getElementById('austBar').style.width     = '0%';
+    document.getElementById('austText').textContent    = aust.vollstaendigkeit_text || 'Keine Ausstattungsdaten verfügbar.';
+    document.getElementById('listSonder').innerHTML    = '<div style="font-size:0.83rem;color:var(--text3);padding:8px 0;">Nicht verfügbar</div>';
+    document.getElementById('listFehlt').innerHTML     = '<div style="font-size:0.83rem;color:var(--text3);padding:8px 0;">Nicht verfügbar</div>';
+  } else {
+    document.getElementById('austProzent').textContent = pct + '%';
+    document.getElementById('austBar').style.width     = pct + '%';
+    document.getElementById('austBar').style.background =
+      pct >= 75 ? 'linear-gradient(90deg,#10B981,#34D399)' :
+      pct >= 50 ? 'linear-gradient(90deg,#F59E0B,#FCD34D)' :
+                  'linear-gradient(90deg,#EF4444,#F87171)';
+    document.getElementById('austProzent').style.color =
+      pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+    document.getElementById('austText').textContent = aust.vollstaendigkeit_text || '';
+
+    const sonderEl = document.getElementById('listSonder');
+    sonderEl.innerHTML = '';
+    (aust.sonder || []).forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'sw-item';
+      d.innerHTML = `<div class="sw-dot" style="background:var(--blue2)"></div><span>${item}</span>`;
+      sonderEl.appendChild(d);
+    });
+
+    const fehltEl = document.getElementById('listFehlt');
+    fehltEl.innerHTML = '';
+    (aust.fehlt || []).forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'sw-item';
+      d.innerHTML = `<div class="sw-dot" style="background:var(--yellow)"></div><span>${item}</span>`;
+      fehltEl.appendChild(d);
+    });
+  }
+
+  document.getElementById('finalAdvice').textContent = data.empfehlung || '';
+
+  const faktoren  = data.kauffaktoren || {};
+  const gewichtung = {
+    preis_vs_markt: 0.25, kilometerstand: 0.20, maengel_tuev: 0.20,
+    ausstattung:    0.15, wertverlust:    0.10, haendler_privat: 0.10
+  };
+  const faktorLabels = {
+    preis_vs_markt: 'Preis vs. Markt', kilometerstand: 'Kilometerstand',
+    maengel_tuev:   'Mängel / TÜV',   ausstattung:    'Ausstattung',
+    wertverlust:    'Wertverlust',     haendler_privat: 'Händler / Privat'
+  };
+  let kp = 0;
+  Object.entries(gewichtung).forEach(([key, w]) => { kp += (faktoren[key]?.punkte || 50) * w; });
+  kp = Math.round(kp);
+
+  const kColor = kp >= 70 ? '#10B981' : kp >= 45 ? '#F59E0B' : '#EF4444';
+  document.getElementById('kaufProzent').textContent  = kp + '%';
+  document.getElementById('kaufProzent').style.color  = kColor;
+  document.getElementById('kaufBar').style.width      = kp + '%';
+  document.getElementById('kaufBar').style.background =
+    kp >= 70 ? 'linear-gradient(90deg,#10B981,#34D399)' :
+    kp >= 45 ? 'linear-gradient(90deg,#F59E0B,#FCD34D)' :
+               'linear-gradient(90deg,#EF4444,#F87171)';
+
+  const faktorEl = document.getElementById('kaufFaktoren');
+  faktorEl.innerHTML = '';
+  Object.entries(gewichtung).forEach(([key, w]) => {
+    const f   = faktoren[key] || { punkte: 50, text: '' };
+    const col = f.punkte >= 70 ? '#10B981' : f.punkte >= 45 ? '#F59E0B' : '#EF4444';
+    faktorEl.innerHTML += `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:0.82rem;color:var(--text2);">${faktorLabels[key]}
+            <span style="color:var(--text3);font-size:0.75rem;">(${Math.round(w*100)}%)</span>
+          </span>
+          <span style="font-size:0.85rem;font-weight:700;color:${col};">${f.punkte}/100</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:999px;height:6px;overflow:hidden;margin-bottom:3px;">
+          <div style="height:100%;width:${f.punkte}%;background:${col};border-radius:999px;transition:width 1s ease;"></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text3);">${f.text || ''}</div>
+      </div>`;
+  });
+  document.getElementById('kaufText').textContent = `Gewichtete Berechnung aus ${Object.keys(gewichtung).length} Faktoren.`;
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showError(msg) {
+  document.getElementById('errorMsg').textContent    = msg;
+  document.getElementById('errorBox').style.display  = 'flex';
+  document.getElementById('analyzeBtn').disabled     = false;
+  document.getElementById('loading').style.display   = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('carUrl').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+  const saved = localStorage.getItem('autocheck_or_key');
+  if (saved) document.getElementById('apiKey').value = saved;
+  document.getElementById('apiKey').addEventListener('change', e => {
+    if (e.target.value) localStorage.setItem('autocheck_or_key', e.target.value);
+  });
+});
+</script>
+</body>
+</html>
