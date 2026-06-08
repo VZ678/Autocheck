@@ -435,6 +435,106 @@ details summary:hover { color: var(--text2); }
   .error-box { flex-direction: column; gap: 10px; }
   .error-box .btn-ghost { width: 100%; text-align: center; margin-left: 0; }
 }
+
+/* ── TOP CARS MODAL ── */
+.tc-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(6px);
+  z-index: 999;
+  overflow-y: auto;
+  padding: 24px 16px 60px;
+}
+.tc-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  width: 100%; max-width: 860px;
+  margin: 0 auto;
+  padding: 28px;
+  position: relative;
+}
+.tc-modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  margin-bottom: 4px;
+}
+.tc-modal-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+.tc-close {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: var(--text2); transition: all 0.15s;
+}
+.tc-close:hover { background: var(--surface3); color: var(--text); }
+.tc-subtitle { font-size: 0.85rem; color: var(--text2); margin-bottom: 18px; line-height: 1.5; }
+.tc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.tc-tab {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 7px 14px;
+  font-size: 0.8rem; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.tc-tab:hover { color: var(--text); background: var(--surface3); }
+.tc-tab.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+.tc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tc-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px;
+  display: flex; gap: 12px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.tc-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.tc-rank {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+  background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800; color: #a5b4fc;
+}
+.tc-rank.gold   { background: rgba(245,158,11,0.15);  border-color: rgba(245,158,11,0.35);  color: #fbbf24; }
+.tc-rank.silver { background: rgba(148,163,184,0.12); border-color: rgba(148,163,184,0.3);  color: #94a3b8; }
+.tc-rank.bronze { background: rgba(180,100,50,0.12);  border-color: rgba(180,100,50,0.3);   color: #cd8845; }
+.tc-body { flex: 1; min-width: 0; }
+.tc-name  { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 1px; }
+.tc-meta  { font-size: 0.75rem; color: var(--text3); margin-bottom: 8px; }
+.tc-badge {
+  display: inline-block; border-radius: 6px; padding: 2px 8px;
+  font-size: 0.7rem; font-weight: 700; margin-bottom: 10px;
+}
+.tc-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.tc-stat-label { font-size: 0.66rem; color: var(--text3); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tc-stat-val   { font-size: 0.82rem; font-weight: 700; }
+.tc-stat-val.green  { color: var(--green); }
+.tc-stat-val.yellow { color: var(--yellow); }
+.tc-list { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.tc-list li {
+  font-size: 0.78rem; color: var(--text2);
+  padding-left: 14px; position: relative; line-height: 1.4;
+}
+.tc-list li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; font-size: 0.72rem; top: 1px; }
+.tc-divider {
+  grid-column: 1/-1;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text3); margin: 4px 0 0;
+}
+.tc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+#topCarsBtn {
+  background: rgba(245,158,11,0.09);
+  border: 1px solid rgba(245,158,11,0.28);
+  border-radius: 10px; color: #fbbf24;
+  font-weight: 700; font-size: 0.88rem;
+  padding: 10px 20px; cursor: pointer;
+  font-family: inherit; transition: all 0.18s;
+}
+#topCarsBtn:hover { background: rgba(245,158,11,0.16); transform: translateY(-1px); }
+@media(max-width:600px) {
+  .tc-modal { padding: 18px 14px; }
+  .tc-grid  { grid-template-columns: 1fr; }
+  .tc-modal-title { font-size: 1.1rem; }
+  .tc-overlay { padding: 12px 10px 40px; }
+}
 </style>
 </head>
 <body>
@@ -449,6 +549,24 @@ details summary:hover { color: var(--text2); }
       <div class="platform-chip"><span class="dot"></span> mobile.de</div>
       <div class="platform-chip"><span class="dot"></span> AutoScout24</div>
       <div class="platform-chip"><span class="dot"></span> Kleinanzeigen</div>
+    </div>
+    <div style="margin-top:22px;">
+      <button id="topCarsBtn" onclick="openTopCars()">🏆 Beste Gebrauchtwagen ansehen</button>
+    </div>
+  </div>
+
+  <!-- TOP CARS MODAL -->
+  <div id="tcOverlay" class="tc-overlay" style="display:none;" onclick="if(event.target===this)closeTopCars()">
+    <div class="tc-modal">
+      <div class="tc-modal-header">
+        <div>
+          <div class="tc-modal-title">🏆 Beste Gebrauchtwagen 2024–2025</div>
+        </div>
+        <button class="tc-close" onclick="closeTopCars()">✕</button>
+      </div>
+      <div class="tc-subtitle">Bewertet nach Zuverlässigkeit (ADAC/TÜV), Unterhaltskosten und Preis-Leistungs-Verhältnis.</div>
+      <div class="tc-tabs" id="tcTabs"></div>
+      <div class="tc-grid" id="tcGrid"></div>
     </div>
   </div>
 
@@ -1262,6 +1380,140 @@ function showError(msg) {
   document.getElementById('errorBox').style.display  = 'flex';
   document.getElementById('analyzeBtn').disabled     = false;
   document.getElementById('loading').style.display   = 'none';
+}
+
+/* ──────────────────────────────────────────────
+   TOP CARS FEATURE
+────────────────────────────────────────────── */
+const TOP_CARS = [
+  {
+    rang:1, name:'Toyota Yaris Hybrid', jahre:'2020–heute', klasse:'Kleinwagen',
+    preis:'12.000–22.000 €', zuverlaessigkeit:98, kostenJahr:'ca. 2.800 €',
+    badge:'rgba(16,185,129,0.15)', badgeColor:'#10B981', badgeText:'🥇 Gesamtsieger',
+    highlights:['Hybridmotor ohne Turbo — kaum Reparaturen','ADAC Pannenstatistik: Bestnote','3,5–4,5 L/100 km Realverbrauch','KFZ-Steuer ab 34 €/Jahr']
+  },
+  {
+    rang:2, name:'Toyota Corolla Hybrid', jahre:'2019–heute', klasse:'Kompaktklasse',
+    preis:'18.000–30.000 €', zuverlaessigkeit:97, kostenJahr:'ca. 3.100 €',
+    badge:'rgba(16,185,129,0.12)', badgeColor:'#10B981', badgeText:'Zuverlässigkeits-Sieger',
+    highlights:['Kein Turbo, kein Steuerketten-Problem','4,5–5,5 L/100 km Hybrid real','ADAC: einer der wenigsten Pannen','Hoher Wiederverkaufswert']
+  },
+  {
+    rang:3, name:'Dacia Sandero / Jogger', jahre:'2012–heute', klasse:'Kleinwagen',
+    preis:'6.000–16.000 €', zuverlaessigkeit:87, kostenJahr:'ca. 2.600 €',
+    badge:'rgba(245,158,11,0.15)', badgeColor:'#F59E0B', badgeText:'💰 Preis-Leistungs-Sieger',
+    highlights:['Günstigste Unterhaltskosten am Markt','Simpelste Technik = wenig Reparaturen','Ersatzteile extrem günstig','Solider Renault-Motor unter der Haube']
+  },
+  {
+    rang:4, name:'Skoda Octavia III', jahre:'2013–2020', klasse:'Kompaktklasse',
+    preis:'10.000–20.000 €', zuverlaessigkeit:85, kostenJahr:'ca. 3.200 €',
+    badge:'rgba(59,130,246,0.15)', badgeColor:'#60A5FA', badgeText:'Familien-Empfehlung',
+    highlights:['Mehr Platz als Golf für weniger Geld','Kofferraum 590 L — größter der Klasse','VW-Technik, weites Servicenetz','TÜV-Report: wenig Mängel']
+  },
+  {
+    rang:5, name:'Mazda3 (SkyActiv-X)', jahre:'2019–heute', klasse:'Kompaktklasse',
+    preis:'15.000–26.000 €', zuverlaessigkeit:93, kostenJahr:'ca. 3.000 €',
+    badge:'rgba(139,92,246,0.15)', badgeColor:'#A78BFA', badgeText:'Qualitäts-Sieger',
+    highlights:['SkyActiv: Saugmotor ohne Turbo-Probleme','Hochwertigste Verarbeitung der Klasse','ADAC Pannenstatistik sehr gut','Gute Restwertstabilität']
+  },
+  {
+    rang:6, name:'Honda Jazz / Honda HR-V', jahre:'2015–2023', klasse:'Kleinwagen',
+    preis:'11.000–22.000 €', zuverlaessigkeit:93, kostenJahr:'ca. 3.000 €',
+    badge:'rgba(59,130,246,0.12)', badgeColor:'#60A5FA', badgeText:'Raumwunder',
+    highlights:['Magic Seat: extremes Raumangebot','Honda Hybridtechnik — kaum Pannen','Keine bekannten Serienmängel','Günstige Versicherungsklasse']
+  },
+  {
+    rang:7, name:'Skoda Fabia III / IV', jahre:'2014–heute', klasse:'Kleinwagen',
+    preis:'7.000–18.000 €', zuverlaessigkeit:83, kostenJahr:'ca. 2.700 €',
+    badge:'rgba(245,158,11,0.12)', badgeColor:'#F59E0B', badgeText:'Budget-Tipp',
+    highlights:['VW-Basis für kleines Budget','Kofferraum 330 L (Klassenbester)','Niedrige Versicherungsklassen','Breites Werkstättenetz in DE']
+  },
+  {
+    rang:8, name:'Toyota RAV4 Hybrid', jahre:'2019–heute', klasse:'SUV',
+    preis:'25.000–42.000 €', zuverlaessigkeit:96, kostenJahr:'ca. 3.800 €',
+    badge:'rgba(16,185,129,0.12)', badgeColor:'#10B981', badgeText:'🏅 Bestes SUV',
+    highlights:['Zuverlässigstes Kompakt-SUV am Markt','Allrad ohne Wartungsaufwand','5,0–6,5 L/100 km Hybridverbrauch','ADAC/TÜV: top Bewertungen']
+  },
+  {
+    rang:9, name:'VW Golf VII / VIII', jahre:'2013–heute', klasse:'Kompaktklasse',
+    preis:'10.000–25.000 €', zuverlaessigkeit:78, kostenJahr:'ca. 3.400 €',
+    badge:'rgba(99,102,241,0.15)', badgeColor:'#818CF8', badgeText:'Bestseller',
+    highlights:['Meistgekaufter Gebrauchtwagen DE','Günstigste Ersatzteile verfügbar','Viele Varianten (TDI/TSI/GTI)','Sehr hoher Wiederverkaufswert']
+  },
+  {
+    rang:10, name:'Hyundai Tucson / Kia Sportage', jahre:'2016–heute', klasse:'SUV',
+    preis:'14.000–28.000 €', zuverlaessigkeit:84, kostenJahr:'ca. 3.600 €',
+    badge:'rgba(245,158,11,0.12)', badgeColor:'#F59E0B', badgeText:'Garantie-SUV',
+    highlights:['7 Jahre Herstellergarantie (Neuwagen)','TÜV: wenig Mängel bei Erstprüfung','Gutes Preis-Leistungs-SUV','Viele Sicherheitsassistenten serienmäßig']
+  }
+];
+
+const TC_TABS = [
+  { label:'Alle', filter: () => true },
+  { label:'Kleinwagen', filter: c => c.klasse === 'Kleinwagen' },
+  { label:'Kompaktklasse', filter: c => c.klasse === 'Kompaktklasse' },
+  { label:'SUV', filter: c => c.klasse === 'SUV' },
+];
+let tcActiveTab = 0;
+
+function renderTopCars() {
+  const cars = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
+  const grid = document.getElementById('tcGrid');
+  grid.innerHTML = '';
+  cars.forEach((c, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const zuColor = c.zuverlaessigkeit >= 90 ? 'green' : c.zuverlaessigkeit >= 80 ? 'yellow' : '';
+    const card = document.createElement('div');
+    card.className = 'tc-card';
+    card.innerHTML = `
+      <div class="tc-rank ${rankClass}">${c.rang}</div>
+      <div class="tc-body">
+        <div class="tc-name">${c.name}</div>
+        <div class="tc-meta">${c.jahre} · ${c.klasse}</div>
+        <div class="tc-badge" style="background:${c.badge};color:${c.badgeColor}">${c.badgeText}</div>
+        <div class="tc-stats">
+          <div>
+            <div class="tc-stat-label">Preis gebraucht</div>
+            <div class="tc-stat-val">${c.preis}</div>
+          </div>
+          <div>
+            <div class="tc-stat-label">Zuverlässigkeit</div>
+            <div class="tc-stat-val ${zuColor}">${c.zuverlaessigkeit}/100</div>
+          </div>
+          <div>
+            <div class="tc-stat-label">Kosten/Jahr</div>
+            <div class="tc-stat-val">${c.kostenJahr}</div>
+          </div>
+        </div>
+        <ul class="tc-list">${c.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function renderTcTabs() {
+  const tabsEl = document.getElementById('tcTabs');
+  tabsEl.innerHTML = '';
+  TC_TABS.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tc-tab' + (i === tcActiveTab ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => { tcActiveTab = i; renderTcTabs(); renderTopCars(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function openTopCars() {
+  document.getElementById('tcOverlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  tcActiveTab = 0;
+  renderTcTabs();
+  renderTopCars();
+}
+
+function closeTopCars() {
+  document.getElementById('tcOverlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
