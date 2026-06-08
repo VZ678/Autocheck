@@ -436,38 +436,7 @@ details summary:hover { color: var(--text2); }
   .error-box .btn-ghost { width: 100%; text-align: center; margin-left: 0; }
 }
 
-/* ── TOP CARS MODAL ── */
-.tc-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.78);
-  backdrop-filter: blur(6px);
-  z-index: 999;
-  overflow-y: auto;
-  padding: 24px 16px 60px;
-}
-.tc-modal {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 20px;
-  width: 100%; max-width: 860px;
-  margin: 0 auto;
-  padding: 28px;
-  position: relative;
-}
-.tc-modal-header {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  margin-bottom: 4px;
-}
-.tc-modal-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
-.tc-close {
-  flex-shrink: 0;
-  width: 34px; height: 34px;
-  background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: 8px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; color: var(--text2); transition: all 0.15s;
-}
-.tc-close:hover { background: var(--surface3); color: var(--text); }
+/* ── TOP CARS SEKTION ── */
 .tc-subtitle { font-size: 0.85rem; color: var(--text2); margin-bottom: 18px; line-height: 1.5; }
 .tc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
 .tc-tab {
@@ -530,10 +499,7 @@ details summary:hover { color: var(--text2); }
 }
 #topCarsBtn:hover { background: rgba(245,158,11,0.16); transform: translateY(-1px); }
 @media(max-width:600px) {
-  .tc-modal { padding: 18px 14px; }
-  .tc-grid  { grid-template-columns: 1fr; }
-  .tc-modal-title { font-size: 1.1rem; }
-  .tc-overlay { padding: 12px 10px 40px; }
+  .tc-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -551,22 +517,7 @@ details summary:hover { color: var(--text2); }
       <div class="platform-chip"><span class="dot"></span> Kleinanzeigen</div>
     </div>
     <div style="margin-top:22px;">
-      <button id="topCarsBtn" onclick="openTopCars()">🏆 Beste Gebrauchtwagen ansehen</button>
-    </div>
-  </div>
-
-  <!-- TOP CARS MODAL -->
-  <div id="tcOverlay" class="tc-overlay" style="display:none;" onclick="if(event.target===this)closeTopCars()">
-    <div class="tc-modal">
-      <div class="tc-modal-header">
-        <div>
-          <div class="tc-modal-title">🏆 Beste Gebrauchtwagen 2024–2025</div>
-        </div>
-        <button class="tc-close" onclick="closeTopCars()">✕</button>
-      </div>
-      <div class="tc-subtitle">Bewertet nach Zuverlässigkeit (ADAC/TÜV), Unterhaltskosten und Preis-Leistungs-Verhältnis.</div>
-      <div class="tc-tabs" id="tcTabs"></div>
-      <div class="tc-grid" id="tcGrid"></div>
+      <button id="topCarsBtn" onclick="document.getElementById('topCarsSection').scrollIntoView({behavior:'smooth'})">🏆 Beste Gebrauchtwagen ansehen</button>
     </div>
   </div>
 
@@ -608,6 +559,21 @@ details summary:hover { color: var(--text2); }
       </button>
     </div>
     <textarea id="extraInfo" style="display:none;"></textarea>
+  </div>
+
+  <!-- TOP CARS SEKTION -->
+  <div class="card" id="topCarsSection" style="margin-top:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;">🏆 Beste Gebrauchtwagen 2024–2025</div>
+        <div style="font-size:0.82rem;color:var(--text2);margin-top:3px;">Sortiert nach Zuverlässigkeit, Unterhaltskosten &amp; Preis-Leistungs-Verhältnis</div>
+      </div>
+    </div>
+    <div class="tc-tabs" id="tcTabs" style="margin-top:16px;margin-bottom:16px;"></div>
+    <div class="tc-grid" id="tcGrid"></div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text3);text-align:center;">
+      Quellen: ADAC Pannenstatistik · TÜV Report · Autobild Gebrauchtwagen · Eigene Bewertung
+    </div>
   </div>
 
   <!-- LOADING -->
@@ -1503,20 +1469,14 @@ function renderTcTabs() {
   });
 }
 
-function openTopCars() {
-  document.getElementById('tcOverlay').style.display = 'block';
-  document.body.style.overflow = 'hidden';
+function initTopCars() {
   tcActiveTab = 0;
   renderTcTabs();
   renderTopCars();
 }
 
-function closeTopCars() {
-  document.getElementById('tcOverlay').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  initTopCars();
   document.getElementById('carUrl').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
   const saved = localStorage.getItem('autocheck_or_key');
   if (saved) {
