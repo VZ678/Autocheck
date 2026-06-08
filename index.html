@@ -590,17 +590,39 @@ details summary:hover { color: var(--text2); }
 
   <!-- TOP CARS SEKTION -->
   <div class="card" id="topCarsSection" style="margin-top:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
       <div>
-        <div style="font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;">🏆 Beste Gebrauchtwagen 2024–2025</div>
-        <div style="font-size:0.82rem;color:var(--text2);margin-top:3px;">Sortiert nach Zuverlässigkeit, Unterhaltskosten &amp; Preis-Leistungs-Verhältnis</div>
+        <div style="font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;">🏆 Beste Gebrauchtwagen</div>
+        <div style="font-size:0.82rem;color:var(--text2);margin-top:3px;">Zuverlässigkeit · Unterhaltskosten · Preis-Leistungs-Verhältnis</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span id="tcStand" style="font-size:0.72rem;color:var(--text3);"></span>
+        <button id="tcRefreshBtn" onclick="refreshTopCars()" title="Neu laden"
+          style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+                 color:var(--text3);padding:5px 9px;font-size:0.8rem;cursor:pointer;
+                 font-family:inherit;transition:all 0.15s;display:none;"
+          onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">
+          ↻
+        </button>
       </div>
     </div>
-    <div class="tc-tabs" id="tcTabs" style="margin-top:16px;margin-bottom:10px;"></div>
-    <div class="tc-brand-row" id="tcBrands"></div>
-    <div class="tc-grid" id="tcGrid"></div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text3);text-align:center;">
-      Quellen: ADAC Pannenstatistik · TÜV Report · Autobild Gebrauchtwagen · Eigene Bewertung
+
+    <!-- Ladeanimation -->
+    <div id="tcLoading" style="display:none;text-align:center;padding:40px 20px;">
+      <div class="loader" style="margin:0 auto 16px;width:40px;height:40px;border-width:3px;"></div>
+      <div style="font-size:0.9rem;font-weight:600;margin-bottom:6px;">Aktuelle Daten werden geladen…</div>
+      <div style="font-size:0.78rem;color:var(--text3);">ADAC · TÜV Report · Autobild — das dauert ~20 Sek.</div>
+    </div>
+
+    <!-- Filter + Liste -->
+    <div id="tcContent">
+      <div class="tc-tabs" id="tcTabs" style="margin-top:16px;margin-bottom:10px;"></div>
+      <div class="tc-brand-row" id="tcBrands"></div>
+      <div class="tc-grid" id="tcGrid"></div>
+    </div>
+
+    <div id="tcFooter" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text3);text-align:center;">
+      Quellen: ADAC Pannenstatistik · TÜV Report · Autobild Gebrauchtwagen
     </div>
   </div>
 
@@ -1450,9 +1472,23 @@ const TC_TABS = [
 ];
 let tcActiveTab   = 0;
 let tcActiveBrand = 'alle';
+let TC_DATA       = [...TOP_CARS]; // wird bei dynamischem Laden ersetzt
+
+const TC_BADGE_STYLES = [
+  { bg:'rgba(16,185,129,0.18)',  color:'#10B981' },
+  { bg:'rgba(16,185,129,0.12)',  color:'#34D399' },
+  { bg:'rgba(245,158,11,0.18)', color:'#F59E0B' },
+  { bg:'rgba(59,130,246,0.15)', color:'#60A5FA' },
+  { bg:'rgba(139,92,246,0.15)', color:'#A78BFA' },
+  { bg:'rgba(59,130,246,0.12)', color:'#60A5FA' },
+  { bg:'rgba(245,158,11,0.12)', color:'#F59E0B' },
+  { bg:'rgba(16,185,129,0.12)', color:'#10B981' },
+  { bg:'rgba(99,102,241,0.15)', color:'#818CF8' },
+  { bg:'rgba(245,158,11,0.12)', color:'#FCD34D' },
+];
 
 function renderTopCars() {
-  const byTab = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
+  const byTab = TC_DATA.filter(TC_TABS[tcActiveTab].filter);
   const cars  = tcActiveBrand === 'alle' ? byTab : byTab.filter(c => c.marke === tcActiveBrand);
   const grid  = document.getElementById('tcGrid');
   grid.innerHTML = '';
@@ -1485,8 +1521,7 @@ function renderTopCars() {
 function renderBrandChips() {
   const el = document.getElementById('tcBrands');
   if (!el) return;
-  // Nur Marken anzeigen, die in der aktuellen Kategorie vorhanden sind
-  const inTab  = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
+  const inTab  = TC_DATA.filter(TC_TABS[tcActiveTab].filter);
   const brands = [...new Set(inTab.map(c => c.marke))].sort();
   el.innerHTML = '<span class="tc-brand-label">Marke</span>';
   ['alle', ...brands].forEach(b => {
@@ -1513,11 +1548,136 @@ function renderTcTabs() {
   });
 }
 
+function showTcLoading() {
+  document.getElementById('tcLoading').style.display  = 'block';
+  document.getElementById('tcContent').style.display  = 'none';
+  document.getElementById('tcFooter').style.display   = 'none';
+}
+function hideTcLoading() {
+  document.getElementById('tcLoading').style.display  = 'none';
+  document.getElementById('tcContent').style.display  = 'block';
+  document.getElementById('tcFooter').style.display   = 'block';
+}
+function setTcStand(ts, dynamic) {
+  const standEl   = document.getElementById('tcStand');
+  const refreshEl = document.getElementById('tcRefreshBtn');
+  if (dynamic && ts) {
+    const d = new Date(ts);
+    const fmt = d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+    standEl.textContent = '🟢 Live — Stand ' + fmt;
+    refreshEl.style.display = 'block';
+  } else {
+    standEl.textContent = '📋 Offline-Daten';
+    refreshEl.style.display = 'none';
+  }
+}
+
+async function loadDynamicTopCars(forceRefresh = false) {
+  const apiKey = localStorage.getItem('autocheck_or_key');
+  if (!apiKey) {
+    // Kein API-Key → statische Liste
+    setTcStand(null, false);
+    renderTcTabs(); renderBrandChips(); renderTopCars();
+    return;
+  }
+
+  const CACHE_KEY = 'autocheck_topcars_v2';
+  const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 Stunden
+
+  if (!forceRefresh) {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts < CACHE_TTL && Array.isArray(data) && data.length >= 5) {
+          TC_DATA = data;
+          setTcStand(ts, true);
+          renderTcTabs(); renderBrandChips(); renderTopCars();
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Daten vom Internet laden
+  showTcLoading();
+  try {
+    const [s1, s2, s3] = await Promise.all([
+      webSearch('ADAC Pannenstatistik 2025 beste zuverlässigste Gebrauchtwagen Kleinwagen Kompakt SUV'),
+      webSearch('TÜV Report 2025 zuverlässigste Gebrauchtwagen wenig Mängel Empfehlung'),
+      webSearch('beste Gebrauchtwagen 2025 Preis Leistung niedrige Unterhaltskosten autobild motor-talk')
+    ]);
+
+    const prompt = `Du bist Kfz-Experte für den deutschen Gebrauchtwagenmarkt.
+Erstelle eine Top-10-Liste der besten Gebrauchtwagen 2025 basierend auf diesen Quelldaten:
+
+[ADAC Pannenstatistik]
+${s1}
+
+[TÜV Report 2025]
+${s2}
+
+[Autobild / Marktdaten]
+${s3}
+
+Kriterien (absteigend nach Priorität):
+1. Zuverlässigkeit laut ADAC/TÜV
+2. Niedrige Unterhaltskosten (Versicherung, Steuer, Service)
+3. Gutes Preis-Leistungs-Verhältnis
+
+Antworte NUR mit einem JSON-Array in \`\`\`json ... \`\`\`:
+[
+  {
+    "rang": 1,
+    "marke": "Toyota",
+    "name": "Toyota Yaris Hybrid",
+    "jahre": "2020–heute",
+    "klasse": "Kleinwagen",
+    "preis": "12.000–22.000 €",
+    "zuverlaessigkeit": 98,
+    "kostenJahr": "ca. 2.800 €",
+    "badgeText": "🥇 Gesamtsieger",
+    "highlights": ["Punkt 1 mit konkretem Fakt","Punkt 2","Punkt 3","Punkt 4"]
+  }
+]
+Erlaubte Werte für klasse: Kleinwagen, Kompaktklasse, SUV, Mittelklasse, Kombi.
+Exakt 10 Einträge. Highlights müssen konkrete Fakten enthalten (z.B. Verbrauchswerte, Kosten, Quellen).`;
+
+    const resp  = await callAI(apiKey, prompt, 3500);
+    const match = resp.match(/```json\s*([\s\S]*?)```/);
+    if (match) {
+      const parsed = JSON.parse(match[1].trim());
+      if (Array.isArray(parsed) && parsed.length >= 5) {
+        parsed.forEach((c, i) => {
+          c.rang       = i + 1;
+          c.badge      = TC_BADGE_STYLES[i]?.bg    || 'rgba(99,102,241,0.12)';
+          c.badgeColor = TC_BADGE_STYLES[i]?.color || '#818CF8';
+        });
+        TC_DATA = parsed;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: parsed, ts: Date.now() }));
+        hideTcLoading();
+        setTcStand(Date.now(), true);
+        renderTcTabs(); renderBrandChips(); renderTopCars();
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Fallback: statische Liste
+  TC_DATA = [...TOP_CARS];
+  hideTcLoading();
+  setTcStand(null, false);
+  renderTcTabs(); renderBrandChips(); renderTopCars();
+}
+
+function refreshTopCars() {
+  localStorage.removeItem('autocheck_topcars_v2');
+  loadDynamicTopCars(true);
+}
+
 function initTopCars() {
   tcActiveTab = 0; tcActiveBrand = 'alle';
-  renderTcTabs();
-  renderBrandChips();
-  renderTopCars();
+  loadDynamicTopCars();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
