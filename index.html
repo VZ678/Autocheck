@@ -1004,6 +1004,9 @@ WICHTIG — lies direkt aus Inseratstext:
 - kilometerstand: berechne km/Jahr. <12k/J=90+Pkt, 12-18k=70-85, 18-25k=50-65, >25k=<50
 - haendler_privat: Händler=75 (Gewährleistung), Privat=55
 - preis_vs_markt: günstiger als Marktdaten=höher, teurer=niedriger
+- ausstattung.sonder: DIREKT aus Inseratstext alle genannten Extras/Features herauslesen (z.B. Navigationssystem, Panoramadach, Sitzheizung, Ledersitze, Xenon, LED, Einparkhilfe, Rückfahrkamera, Tempomat, Bluetooth, Apple CarPlay, Standheizung, AHK, Allrad, Sportpaket, Alufelgen, 19-Zoll-Felgen usw.). Mit geschätztem Aufpreiswert. NUR was tatsächlich im Text vorkommt!
+- ausstattung.fehlt: Was für dieses Modell/Ausstattungslinie typisch wäre, aber im Inserat fehlt.
+- ausstattung.prozent: 0-100, wie vollständig ist Ausstattung für diese Klasse.
 
 Antworte NUR mit validem JSON in \`\`\`json ... \`\`\`:
 \`\`\`json
@@ -1026,6 +1029,12 @@ Antworte NUR mit validem JSON in \`\`\`json ... \`\`\`:
   "staerken": ["Stärke 1","Stärke 2","Stärke 3","Stärke 4"],
   "schwaechen": ["Schwäche 1","Schwäche 2","Schwäche 3"],
   "empfehlung": "4-5 Sätze. Zitiere KONKRET Quellen: Laut ADAC... / TÜV Report zeigt... / AutoBild empfiehlt... Gib Preisverhandlungstipp.",
+  "ausstattung": {
+    "sonder": ["Navigationssystem (~900 €)","Panoramadach (~1.200 €)","Sitzheizung (~300 €)"],
+    "fehlt": ["Standheizung (~800 €)","Head-up-Display (~400 €)"],
+    "prozent": 72,
+    "text": "Gut ausgestattet für die Kompaktklasse, Navigation und Komfortfeatures vorhanden"
+  },
   "kauffaktoren": {
     "preis_vs_markt":  {"punkte": 80, "text": "z.B. 5% unter Marktpreis"},
     "kilometerstand":  {"punkte": 70, "text": "z.B. 13.000 km/Jahr — normal"},
@@ -1042,50 +1051,53 @@ verdict: kaufen=66-100, abwarten=41-65, meiden=0-40`;
     document.getElementById('rawResponse').textContent = response;
     const data = parseJSON(response);
 
-    // ── AUFRUF 2: Ausstattungsanalyse ──
+    // ── Ausstattung: aus Hauptantwort lesen (kein zweiter API-Call nötig) ──
     let aust = {};
-    if (text.length < 300) {
-      // Kein Seitentext → keine Ausstattungsdaten → nichts erfinden
+    const mainAust = data.ausstattung;
+    if (mainAust && (mainAust.sonder?.length > 0 || mainAust.fehlt?.length > 0)) {
+      // Hauptanalyse hat Ausstattung erfolgreich extrahiert
       aust = {
-        sonder: [], fehlt: [],
-        vollstaendigkeit_prozent: 0,
-        vollstaendigkeit_text: 'Ausstattungsanalyse nicht möglich — Inserat konnte nicht geladen werden (mobile.de oder Proxy blockiert).'
+        sonder: mainAust.sonder || [],
+        fehlt:  mainAust.fehlt  || [],
+        vollstaendigkeit_prozent: mainAust.prozent || 65,
+        vollstaendigkeit_text:    mainAust.text    || ''
       };
-    } else {
+    } else if (text.length >= 300) {
+      // Fallback: separater API-Call falls Hauptanalyse keine Ausstattung lieferte
       setStep('Ausstattung analysieren…');
-      const promptAust = `Auto: ${data.fahrzeug || carFull}
+      const promptAust = `Du analysierst ein deutsches Kfz-Inserat. Extrahiere die Ausstattungsmerkmale.
 
-Inseratstext (enthält Webseiten-Navigation, Links UND Fahrzeugdaten gemischt):
-${text.slice(0, 6000)}
+Auto: ${data.fahrzeug || carFull}
 
-AUFGABE: Finde im obigen Text alle Ausstattungsmerkmale dieses Fahrzeugs.
+INSERATSTEXT:
+${text.slice(0, 7000)}
 
-Ausstattungsmerkmale in deutschen Kfz-Inseraten sind kurze Begriffe, z.B.:
-Klimaanlage, Navigationssystem, Sitzheizung, Ledersitze, Panoramadach, Schiebedach,
-Xenon, LED-Scheinwerfer, Einparkhilfe, Rückfahrkamera, Tempomat, Adaptiver Tempomat,
-ABS, ESP, Totwinkelassistent, Spurhalteassistent, Bluetooth, Apple CarPlay, Android Auto,
-Standheizung, Anhängerkupplung, Allrad, Sportpaket, M-Paket, AMG-Paket, Alufelgen usw.
+AUFGABE: Finde ALLE im obigen Text genannten Ausstattungsfeatures dieses Fahrzeugs.
+Typische Beispiele: Navigationssystem, Panoramadach, Sitzheizung vorn/hinten, Ledersitze,
+Xenon/LED-Scheinwerfer, Einparkhilfe hinten/vorn, Rückfahrkamera, Tempomat/ACC,
+Bluetooth, Apple CarPlay, Android Auto, Standheizung, Anhängerkupplung, Allradantrieb,
+Sportpaket, M-Paket, AMG-Paket, 19-Zoll-Alufelgen, Sportfahrwerk, Memorysitze usw.
 
-IGNORIERE: Website-Navigation, Buttons, URLs (http...), Händlername, AGBs, Datenschutz,
-Preisangaben, Kilometerstand, Baujahr, PS-Angaben, Beschreibungstexte des Verkäufers.
+SONDER: (nur Extras die DIREKT IM TEXT stehen, mit geschätztem Aufpreis)
+- Feature (~XXX €)
 
-1. SONDER: Kostenpflichtige Extras die im Text stehen (nicht Serienausstattung).
-2. FEHLT: Was fehlt typischerweise bei diesem Modell/Linie für Vollausstattung?
+FEHLT: (was fehlt für Vollausstattung bei diesem Modell)
+- Feature (~XXX €)
 
-SONDER:
-- Feature 1 (~XXX €)
-
-FEHLT:
-- Fehlendes Feature (~XXX €)
-
-PROZENT: 72
-TEXT: Ein Satz Bewertung.`;
+PROZENT: (0–100, Ausstattungsgrad)
+TEXT: (ein Satz Bewertung)`;
 
       try {
         const austResp = await callAI(apiKey, promptAust, 2048);
         const parsed   = parseAustText(austResp);
         aust = (parsed.sonder.length > 0 || parsed.fehlt.length > 0) ? parsed : parseJSON(austResp);
       } catch(e) { /* Ausstattung optional */ }
+    } else {
+      aust = {
+        sonder: [], fehlt: [],
+        vollstaendigkeit_prozent: 0,
+        vollstaendigkeit_text: 'Ausstattungsanalyse nicht möglich — Inserat konnte nicht geladen werden.'
+      };
     }
 
 
