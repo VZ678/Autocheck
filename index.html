@@ -482,6 +482,33 @@ details summary:hover { color: var(--text2); }
   padding-left: 14px; position: relative; line-height: 1.4;
 }
 .tc-list li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; font-size: 0.72rem; top: 1px; }
+.tc-brand-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px; padding: 10px 14px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.tc-brand-label {
+  font-size: 0.7rem; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  white-space: nowrap; margin-right: 2px;
+}
+.tc-brand-chip {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 0.78rem; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+  white-space: nowrap;
+}
+.tc-brand-chip:hover { color: var(--text); background: var(--surface3); border-color: var(--border2); }
+.tc-brand-chip.active {
+  background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.45);
+  color: #60a5fa;
+}
+.tc-empty {
+  grid-column: 1/-1; text-align: center; padding: 36px 20px;
+  color: var(--text3); font-size: 0.9rem;
+}
 .tc-divider {
   grid-column: 1/-1;
   display: flex; align-items: center; gap: 10px;
@@ -569,7 +596,8 @@ details summary:hover { color: var(--text2); }
         <div style="font-size:0.82rem;color:var(--text2);margin-top:3px;">Sortiert nach Zuverlässigkeit, Unterhaltskosten &amp; Preis-Leistungs-Verhältnis</div>
       </div>
     </div>
-    <div class="tc-tabs" id="tcTabs" style="margin-top:16px;margin-bottom:16px;"></div>
+    <div class="tc-tabs" id="tcTabs" style="margin-top:16px;margin-bottom:10px;"></div>
+    <div class="tc-brand-row" id="tcBrands"></div>
     <div class="tc-grid" id="tcGrid"></div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text3);text-align:center;">
       Quellen: ADAC Pannenstatistik · TÜV Report · Autobild Gebrauchtwagen · Eigene Bewertung
@@ -1353,61 +1381,61 @@ function showError(msg) {
 ────────────────────────────────────────────── */
 const TOP_CARS = [
   {
-    rang:1, name:'Toyota Yaris Hybrid', jahre:'2020–heute', klasse:'Kleinwagen',
+    rang:1, marke:'Toyota', name:'Toyota Yaris Hybrid', jahre:'2020–heute', klasse:'Kleinwagen',
     preis:'12.000–22.000 €', zuverlaessigkeit:98, kostenJahr:'ca. 2.800 €',
     badge:'rgba(16,185,129,0.15)', badgeColor:'#10B981', badgeText:'🥇 Gesamtsieger',
     highlights:['Hybridmotor ohne Turbo — kaum Reparaturen','ADAC Pannenstatistik: Bestnote','3,5–4,5 L/100 km Realverbrauch','KFZ-Steuer ab 34 €/Jahr']
   },
   {
-    rang:2, name:'Toyota Corolla Hybrid', jahre:'2019–heute', klasse:'Kompaktklasse',
+    rang:2, marke:'Toyota', name:'Toyota Corolla Hybrid', jahre:'2019–heute', klasse:'Kompaktklasse',
     preis:'18.000–30.000 €', zuverlaessigkeit:97, kostenJahr:'ca. 3.100 €',
     badge:'rgba(16,185,129,0.12)', badgeColor:'#10B981', badgeText:'Zuverlässigkeits-Sieger',
     highlights:['Kein Turbo, kein Steuerketten-Problem','4,5–5,5 L/100 km Hybrid real','ADAC: einer der wenigsten Pannen','Hoher Wiederverkaufswert']
   },
   {
-    rang:3, name:'Dacia Sandero / Jogger', jahre:'2012–heute', klasse:'Kleinwagen',
+    rang:3, marke:'Dacia', name:'Dacia Sandero / Jogger', jahre:'2012–heute', klasse:'Kleinwagen',
     preis:'6.000–16.000 €', zuverlaessigkeit:87, kostenJahr:'ca. 2.600 €',
     badge:'rgba(245,158,11,0.15)', badgeColor:'#F59E0B', badgeText:'💰 Preis-Leistungs-Sieger',
     highlights:['Günstigste Unterhaltskosten am Markt','Simpelste Technik = wenig Reparaturen','Ersatzteile extrem günstig','Solider Renault-Motor unter der Haube']
   },
   {
-    rang:4, name:'Skoda Octavia III', jahre:'2013–2020', klasse:'Kompaktklasse',
+    rang:4, marke:'Skoda', name:'Skoda Octavia III', jahre:'2013–2020', klasse:'Kompaktklasse',
     preis:'10.000–20.000 €', zuverlaessigkeit:85, kostenJahr:'ca. 3.200 €',
     badge:'rgba(59,130,246,0.15)', badgeColor:'#60A5FA', badgeText:'Familien-Empfehlung',
     highlights:['Mehr Platz als Golf für weniger Geld','Kofferraum 590 L — größter der Klasse','VW-Technik, weites Servicenetz','TÜV-Report: wenig Mängel']
   },
   {
-    rang:5, name:'Mazda3 (SkyActiv-X)', jahre:'2019–heute', klasse:'Kompaktklasse',
+    rang:5, marke:'Mazda', name:'Mazda3 (SkyActiv-X)', jahre:'2019–heute', klasse:'Kompaktklasse',
     preis:'15.000–26.000 €', zuverlaessigkeit:93, kostenJahr:'ca. 3.000 €',
     badge:'rgba(139,92,246,0.15)', badgeColor:'#A78BFA', badgeText:'Qualitäts-Sieger',
     highlights:['SkyActiv: Saugmotor ohne Turbo-Probleme','Hochwertigste Verarbeitung der Klasse','ADAC Pannenstatistik sehr gut','Gute Restwertstabilität']
   },
   {
-    rang:6, name:'Honda Jazz / Honda HR-V', jahre:'2015–2023', klasse:'Kleinwagen',
+    rang:6, marke:'Honda', name:'Honda Jazz / Honda HR-V', jahre:'2015–2023', klasse:'Kleinwagen',
     preis:'11.000–22.000 €', zuverlaessigkeit:93, kostenJahr:'ca. 3.000 €',
     badge:'rgba(59,130,246,0.12)', badgeColor:'#60A5FA', badgeText:'Raumwunder',
     highlights:['Magic Seat: extremes Raumangebot','Honda Hybridtechnik — kaum Pannen','Keine bekannten Serienmängel','Günstige Versicherungsklasse']
   },
   {
-    rang:7, name:'Skoda Fabia III / IV', jahre:'2014–heute', klasse:'Kleinwagen',
+    rang:7, marke:'Skoda', name:'Skoda Fabia III / IV', jahre:'2014–heute', klasse:'Kleinwagen',
     preis:'7.000–18.000 €', zuverlaessigkeit:83, kostenJahr:'ca. 2.700 €',
     badge:'rgba(245,158,11,0.12)', badgeColor:'#F59E0B', badgeText:'Budget-Tipp',
     highlights:['VW-Basis für kleines Budget','Kofferraum 330 L (Klassenbester)','Niedrige Versicherungsklassen','Breites Werkstättenetz in DE']
   },
   {
-    rang:8, name:'Toyota RAV4 Hybrid', jahre:'2019–heute', klasse:'SUV',
+    rang:8, marke:'Toyota', name:'Toyota RAV4 Hybrid', jahre:'2019–heute', klasse:'SUV',
     preis:'25.000–42.000 €', zuverlaessigkeit:96, kostenJahr:'ca. 3.800 €',
     badge:'rgba(16,185,129,0.12)', badgeColor:'#10B981', badgeText:'🏅 Bestes SUV',
     highlights:['Zuverlässigstes Kompakt-SUV am Markt','Allrad ohne Wartungsaufwand','5,0–6,5 L/100 km Hybridverbrauch','ADAC/TÜV: top Bewertungen']
   },
   {
-    rang:9, name:'VW Golf VII / VIII', jahre:'2013–heute', klasse:'Kompaktklasse',
+    rang:9, marke:'VW', name:'VW Golf VII / VIII', jahre:'2013–heute', klasse:'Kompaktklasse',
     preis:'10.000–25.000 €', zuverlaessigkeit:78, kostenJahr:'ca. 3.400 €',
     badge:'rgba(99,102,241,0.15)', badgeColor:'#818CF8', badgeText:'Bestseller',
     highlights:['Meistgekaufter Gebrauchtwagen DE','Günstigste Ersatzteile verfügbar','Viele Varianten (TDI/TSI/GTI)','Sehr hoher Wiederverkaufswert']
   },
   {
-    rang:10, name:'Hyundai Tucson / Kia Sportage', jahre:'2016–heute', klasse:'SUV',
+    rang:10, marke:'Hyundai/Kia', name:'Hyundai Tucson / Kia Sportage', jahre:'2016–heute', klasse:'SUV',
     preis:'14.000–28.000 €', zuverlaessigkeit:84, kostenJahr:'ca. 3.600 €',
     badge:'rgba(245,158,11,0.12)', badgeColor:'#F59E0B', badgeText:'Garantie-SUV',
     highlights:['7 Jahre Herstellergarantie (Neuwagen)','TÜV: wenig Mängel bei Erstprüfung','Gutes Preis-Leistungs-SUV','Viele Sicherheitsassistenten serienmäßig']
@@ -1415,20 +1443,26 @@ const TOP_CARS = [
 ];
 
 const TC_TABS = [
-  { label:'Alle', filter: () => true },
-  { label:'Kleinwagen', filter: c => c.klasse === 'Kleinwagen' },
+  { label:'Alle',          filter: () => true },
+  { label:'Kleinwagen',    filter: c => c.klasse === 'Kleinwagen' },
   { label:'Kompaktklasse', filter: c => c.klasse === 'Kompaktklasse' },
-  { label:'SUV', filter: c => c.klasse === 'SUV' },
+  { label:'SUV',           filter: c => c.klasse === 'SUV' },
 ];
-let tcActiveTab = 0;
+let tcActiveTab   = 0;
+let tcActiveBrand = 'alle';
 
 function renderTopCars() {
-  const cars = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
-  const grid = document.getElementById('tcGrid');
+  const byTab = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
+  const cars  = tcActiveBrand === 'alle' ? byTab : byTab.filter(c => c.marke === tcActiveBrand);
+  const grid  = document.getElementById('tcGrid');
   grid.innerHTML = '';
+  if (cars.length === 0) {
+    grid.innerHTML = '<div class="tc-empty">Keine Fahrzeuge für diese Filterauswahl.</div>';
+    return;
+  }
   cars.forEach((c, i) => {
     const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-    const zuColor = c.zuverlaessigkeit >= 90 ? 'green' : c.zuverlaessigkeit >= 80 ? 'yellow' : '';
+    const zuColor   = c.zuverlaessigkeit >= 90 ? 'green' : c.zuverlaessigkeit >= 80 ? 'yellow' : '';
     const card = document.createElement('div');
     card.className = 'tc-card';
     card.innerHTML = `
@@ -1438,22 +1472,29 @@ function renderTopCars() {
         <div class="tc-meta">${c.jahre} · ${c.klasse}</div>
         <div class="tc-badge" style="background:${c.badge};color:${c.badgeColor}">${c.badgeText}</div>
         <div class="tc-stats">
-          <div>
-            <div class="tc-stat-label">Preis gebraucht</div>
-            <div class="tc-stat-val">${c.preis}</div>
-          </div>
-          <div>
-            <div class="tc-stat-label">Zuverlässigkeit</div>
-            <div class="tc-stat-val ${zuColor}">${c.zuverlaessigkeit}/100</div>
-          </div>
-          <div>
-            <div class="tc-stat-label">Kosten/Jahr</div>
-            <div class="tc-stat-val">${c.kostenJahr}</div>
-          </div>
+          <div><div class="tc-stat-label">Preis gebraucht</div><div class="tc-stat-val">${c.preis}</div></div>
+          <div><div class="tc-stat-label">Zuverlässigkeit</div><div class="tc-stat-val ${zuColor}">${c.zuverlaessigkeit}/100</div></div>
+          <div><div class="tc-stat-label">Kosten/Jahr</div><div class="tc-stat-val">${c.kostenJahr}</div></div>
         </div>
         <ul class="tc-list">${c.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
       </div>`;
     grid.appendChild(card);
+  });
+}
+
+function renderBrandChips() {
+  const el = document.getElementById('tcBrands');
+  if (!el) return;
+  // Nur Marken anzeigen, die in der aktuellen Kategorie vorhanden sind
+  const inTab  = TOP_CARS.filter(TC_TABS[tcActiveTab].filter);
+  const brands = [...new Set(inTab.map(c => c.marke))].sort();
+  el.innerHTML = '<span class="tc-brand-label">Marke</span>';
+  ['alle', ...brands].forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'tc-brand-chip' + (b === tcActiveBrand ? ' active' : '');
+    btn.textContent = b === 'alle' ? 'Alle' : b;
+    btn.onclick = () => { tcActiveBrand = b; renderBrandChips(); renderTopCars(); };
+    el.appendChild(btn);
   });
 }
 
@@ -1464,14 +1505,18 @@ function renderTcTabs() {
     const btn = document.createElement('button');
     btn.className = 'tc-tab' + (i === tcActiveTab ? ' active' : '');
     btn.textContent = t.label;
-    btn.onclick = () => { tcActiveTab = i; renderTcTabs(); renderTopCars(); };
+    btn.onclick = () => {
+      tcActiveTab = i; tcActiveBrand = 'alle';
+      renderTcTabs(); renderBrandChips(); renderTopCars();
+    };
     tabsEl.appendChild(btn);
   });
 }
 
 function initTopCars() {
-  tcActiveTab = 0;
+  tcActiveTab = 0; tcActiveBrand = 'alle';
   renderTcTabs();
+  renderBrandChips();
   renderTopCars();
 }
 
