@@ -812,15 +812,22 @@ details summary:hover { color: var(--text2); }
 // Fallback-Kette: wird der Reihe nach probiert wenn ein Modell nicht verfügbar ist
 const MODELS = [
   'deepseek/deepseek-r1:free',
+  'google/gemini-2.0-flash-exp:free',
   'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen-2.5-72b-instruct:free',
   'google/gemma-3-27b-it:free',
+  'nvidia/llama-3.1-nemotron-70b-instruct:free',
   'mistralai/mistral-7b-instruct:free',
+  'google/gemma-2-9b-it:free',
   'meta-llama/llama-3.1-8b-instruct:free',
+  'qwen/qwen3-8b:free',
   'google/gemma-4-31b-it:free',
-  'qwen/qwen3-8b:free'
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'microsoft/phi-3-medium-128k-instruct:free'
 ];
 
-let keyVisible = false;
+let keyVisible    = false;
+let analysisRunning = false; // verhindert parallele Top-Cars-Anfragen während Analyse
 
 function toggleKey() {
   const inp = document.getElementById('apiKey');
@@ -1100,6 +1107,7 @@ async function analyze() {
   document.getElementById('result').style.display    = 'none';
   document.getElementById('loading').style.display   = 'block';
   document.getElementById('analyzeBtn').disabled     = true;
+  analysisRunning = true;
 
   try {
     const platform = detectPlatform(url);
@@ -1250,6 +1258,7 @@ TEXT: (ein Satz Bewertung)`;
   } finally {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('analyzeBtn').disabled = false;
+    analysisRunning = false;
   }
 }
 
@@ -1581,6 +1590,11 @@ function setTcStand(ts, dynamic) {
 }
 
 async function loadDynamicTopCars(forceRefresh = false) {
+  // Nicht laden wenn gerade eine Fahrzeuganalyse läuft
+  if (analysisRunning) {
+    setTimeout(() => loadDynamicTopCars(forceRefresh), 5000);
+    return;
+  }
   const apiKey = localStorage.getItem('autocheck_or_key');
   if (!apiKey) {
     // Kein API-Key → statische Liste
@@ -1685,7 +1699,10 @@ function refreshTopCars() {
 
 function initTopCars() {
   tcActiveTab = 0; tcActiveBrand = 'alle';
-  loadDynamicTopCars();
+  // Statische Liste sofort anzeigen
+  renderTcTabs(); renderBrandChips(); renderTopCars();
+  // Dynamische Daten mit 3 Sek. Verzögerung laden (damit Analyse-Bereich Priorität hat)
+  setTimeout(() => loadDynamicTopCars(), 3000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
